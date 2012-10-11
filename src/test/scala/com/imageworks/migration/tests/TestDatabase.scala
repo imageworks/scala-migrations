@@ -36,9 +36,11 @@ import com.imageworks.migration.{AutoCommit,
                                  ConnectionBuilder,
                                  DatabaseAdapter,
                                  DerbyDatabaseAdapter,
+                                 PostgresqlDatabaseAdapter,
                                  With}
 
 import java.sql.DriverManager
+import scala.Some
 
 /**
  * Sealed trait abstracting the database to use for testing.
@@ -76,12 +78,19 @@ sealed trait TestDatabase
    * The DatabaseAdapter to use for the test database.
    */
   def getDatabaseAdapter: DatabaseAdapter
+
+  /**
+   * Set up anything before tests are run.
+   */
+  def setUp(): Unit
+
+  /**
+   * Tear down anything that was set up before tests were run.
+   */
+  def tearDown(): Unit
 }
 
-/**
- * Derby test database implementation.
- */
-object DerbyTestDatabase
+sealed trait BaseTestDatabase
   extends TestDatabase
 {
   // Username of the admin account, which will be the owner of the
@@ -96,6 +105,8 @@ object DerbyTestDatabase
   private
   val admin_password = "foobar"
 
+  def getAdminPassword: String = admin_password
+
   // Username of the user account.
   private
   val user_username = "user"
@@ -107,74 +118,10 @@ object DerbyTestDatabase
   private
   val user_password = "baz"
 
+  def getUserPassword: String = user_password
+
   // The base JDBC URL.
-  private
-  val url =
-  {
-    "jdbc:derby:" + System.currentTimeMillis.toString
-  }
-
-  // Set the Derby system home directory to "target/test-databases" so
-  // the derby.log file and all databases will be placed in there.
-  System.getProperties.setProperty("derby.system.home",
-                                   "target/test-databases")
-
-  // Load the Derby database driver.
-  Class.forName("org.apache.derby.jdbc.EmbeddedDriver")
-
-  // Create the database,  set it up for connection and SQL
-  // authorization and then shut it down, so the next connection will
-  // "boot" it with connection and SQL authorizations enabled.
-
-  // Create the database.
-  With.connection(DriverManager.getConnection(url + ";create=true",
-                                              admin_username,
-                                              admin_password)) { c =>
-    TestDatabase.execute(
-      getAdminConnectionBuilder,
-      """CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
-           'derby.connection.requireAuthentication', 'true')""")
-
-    // Setting this property cannot be undone.  See
-    // http://db.apache.org/derby/docs/10.7/ref/rrefpropersqlauth.html .
-    TestDatabase.execute(
-      getAdminConnectionBuilder,
-      """CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
-           'derby.database.sqlAuthorization', 'true')""")
-
-    TestDatabase.execute(
-      getAdminConnectionBuilder,
-      """CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
-           'derby.authentication.provider', 'BUILTIN')""")
-
-    TestDatabase.execute(
-      getAdminConnectionBuilder,
-      """CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
-           'derby.user.""" + admin_username + """', '""" + admin_password + """')""")
-
-    TestDatabase.execute(
-      getAdminConnectionBuilder,
-        """CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
-             'derby.user.""" + user_username + """', '""" + user_password + """')""")
-  }
-
-  // Shutdown Derby.
-  try {
-    With.connection(DriverManager.getConnection(url + ";shutdown=true",
-                                                admin_username,
-                                                admin_password)) { _ =>
-    }
-  }
-  catch {
-    // For JDBC3 (JDK 1.5)
-    case e: org.apache.derby.impl.jdbc.EmbedSQLException =>
-
-    // For JDBC4 (JDK 1.6), a
-    // java.sql.SQLNonTransientConnectionException is thrown, but this
-    // exception class does not exist in JDK 1.5, so catch a
-    // java.sql.SQLException instead.
-    case e: java.sql.SQLException =>
-  }
+  def getUrl: String
 
   override
   def getSchemaName: String =
@@ -185,19 +132,158 @@ object DerbyTestDatabase
   override
   def getAdminConnectionBuilder: ConnectionBuilder =
   {
-    new ConnectionBuilder(url, admin_username, admin_password)
+    new ConnectionBuilder(getUrl, admin_username, admin_password)
   }
 
   override
   def getUserConnectionBuilder: ConnectionBuilder =
   {
-    new ConnectionBuilder(url, user_username, user_password)
+    new ConnectionBuilder(getUrl, user_username, user_password)
+  }
+}
+
+/**
+ * Derby test database implementation.
+ */
+object DerbyTestDatabase
+  extends BaseTestDatabase
+{
+  private val url = "jdbc:derby:" + System.currentTimeMillis.toString
+
+  override
+  def getUrl = url
+
+  def setUp() {
+    // Set the Derby system home directory to "target/test-databases" so
+    // the derby.log file and all databases will be placed in there.
+    System.getProperties.setProperty("derby.system.home",
+                                     "target/test-databases")
+
+    // Load the Derby database driver.
+    Class.forName("org.apache.derby.jdbc.EmbeddedDriver")
+
+    // Create the database,  set it up for connection and SQL
+    // authorization and then shut it down, so the next connection will
+    // "boot" it with connection and SQL authorizations enabled.
+
+    // Create the database.
+    With.connection(DriverManager.getConnection(getUrl + ";create=true",
+                                                getAdminAccountName,
+                                                getAdminPassword)) { c =>
+      TestDatabase.execute(
+        getAdminConnectionBuilder,
+        """CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+             'derby.connection.requireAuthentication', 'true')""")
+
+      // Setting this property cannot be undone.  See
+      // http://db.apache.org/derby/docs/10.7/ref/rrefpropersqlauth.html .
+      TestDatabase.execute(
+        getAdminConnectionBuilder,
+        """CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+             'derby.database.sqlAuthorization', 'true')""")
+
+      TestDatabase.execute(
+        getAdminConnectionBuilder,
+        """CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+             'derby.authentication.provider', 'BUILTIN')""")
+
+      TestDatabase.execute(
+        getAdminConnectionBuilder,
+        """CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+             'derby.user.""" + getAdminAccountName + """', '""" + getAdminPassword + """')""")
+
+      TestDatabase.execute(
+        getAdminConnectionBuilder,
+          """CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+               'derby.user.""" + getUserAccountName + """', '""" + getUserPassword + """')""")
+    }
+
+    // Shutdown Derby.
+    try {
+      With.connection(DriverManager.getConnection(getUrl + ";shutdown=true",
+                                                  getAdminAccountName,
+                                                  getAdminPassword)) { _ =>
+      }
+    }
+    catch {
+      // For JDBC3 (JDK 1.5)
+      case e: org.apache.derby.impl.jdbc.EmbedSQLException =>
+
+      // For JDBC4 (JDK 1.6), a
+      // java.sql.SQLNonTransientConnectionException is thrown, but this
+      // exception class does not exist in JDK 1.5, so catch a
+      // java.sql.SQLException instead.
+      case e: java.sql.SQLException =>
+    }
+  }
+
+  def tearDown() {
+    // Nothing to do.
   }
 
   override
   def getDatabaseAdapter: DatabaseAdapter =
   {
     new DerbyDatabaseAdapter(Some(getSchemaName))
+  }
+}
+
+/**
+ * Postgresql test database implementation.
+ */
+object PostgresqlTestDatabase
+  extends BaseTestDatabase
+{
+  private val dbName = "scala-migrations-tests"
+  private val baseUrl = "jdbc:postgresql://localhost:5432/"
+  private val url = baseUrl + dbName
+  private val initUrl = baseUrl + "postgres"
+
+  private def getInitConnectionBuilder =
+    new ConnectionBuilder(initUrl, getAdminAccountName, getAdminPassword)
+
+  override
+  def getUrl = url
+
+  def setUp() {
+    // Load the Postgresql database driver.
+    Class.forName("org.postgresql.Driver")
+
+    // Drop any currently existing objects if they already exist.
+    tearDown()
+
+    // Create the database.
+    TestDatabase.execute(
+      getInitConnectionBuilder,
+      "CREATE DATABASE \"" + dbName + "\" OWNER " + getAdminAccountName)
+
+    // Create the user.
+    TestDatabase.execute(
+      getInitConnectionBuilder,
+      "CREATE USER \"" + getUserAccountName + "\" WITH PASSWORD '" + getUserPassword + "'")
+
+    // Create the schema.
+    TestDatabase.execute(
+      getAdminConnectionBuilder,
+      "CREATE SCHEMA \"" + getAdminAccountName + "\"")
+  }
+
+  def tearDown() {
+    // Drop the database.
+    TestDatabase.execute(
+      getInitConnectionBuilder,
+      "DROP DATABASE IF EXISTS \"" + dbName + "\"")
+
+    // Drop the user.
+    TestDatabase.execute(
+      getInitConnectionBuilder,
+      "DROP ROLE IF EXISTS \"" + getUserAccountName + "\"")
+  }
+
+  override
+  def getDatabaseAdapter: DatabaseAdapter =
+  {
+    new PostgresqlDatabaseAdapter(Some(getSchemaName))
   }
 }
 
@@ -215,6 +301,9 @@ object TestDatabase
     System.getProperty("scala-migrations.db.vendor", "derby") match {
       case "derby" => {
         DerbyTestDatabase
+      }
+      case "postgresql" => {
+        PostgresqlTestDatabase
       }
       case v => {
         val m = "Unexpected value for scala-migrations.db.vendor property: " +
@@ -235,6 +324,10 @@ object TestDatabase
   override def getUserConnectionBuilder = db.getUserConnectionBuilder
 
   override def getDatabaseAdapter = db.getDatabaseAdapter
+
+  override def setUp(): Unit = db.setUp()
+
+  override def tearDown(): Unit = db.tearDown()
 
   def execute(connection_builder: ConnectionBuilder,
               sql: String): Boolean =

@@ -393,6 +393,9 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
         case UpdatePrivilege =>
           "UPDATE"
 
+        case UsagePrivilege =>
+          "USAGE"
+
         case ReferencesPrivilege(columns) =>
           "REFERENCES" + formatColumns(columns)
         case SelectPrivilege(columns) =>
@@ -404,8 +407,19 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
     val quoted_grantees = for (g <- grantees)
                             yield '"' + unquotedNameConverter(g) + '"'
 
+    // Get the quoted table name or just the schema name prefixed by SCHEMA
+    // in the grant usage case.
+    val schema_or_table_name = if (privileges.contains(UsagePrivilege)) {
+      "SCHEMA " + '"' +
+        unquotedNameConverter(schema_name_opt.getOrElse(schemaNameOpt.getOrElse(""))) +
+        '"'
+    }
+    else {
+      quoteTableName(table_name)
+    }
+
     sql.append(" ON ")
-       .append(quoteTableName(table_name))
+       .append(schema_or_table_name)
        .append(' ')
        .append(preposition)
        .append(' ')
@@ -429,9 +443,6 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
                grantees: Array[String],
                privileges: GrantPrivilegeType*): String =
   {
-    val sql = new java.lang.StringBuilder(256)
-               .append("GRANT")
-
     grantRevokeCommon("GRANT",
                       "TO",
                       schema_name_opt,

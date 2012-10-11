@@ -99,4 +99,15 @@ class PostgresqlDatabaseAdapter(override val schemaNameOpt: Option[String])
       .append(column_definition.toSql)
       .toString
   }
+
+  override
+  def grantSql(schema_name_opt: Option[String],
+               table_name: String,
+               grantees: Array[String],
+               privileges: GrantPrivilegeType*): String = {
+    Array(
+      super.grantSql(schema_name_opt, "", grantees, UsagePrivilege),
+      super.grantSql(schema_name_opt, table_name, grantees, privileges:_*)
+    ).mkString("; ")
+  }
 }

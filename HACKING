@@ -1,0 +1,17 @@
+For Scala 2.8+:
+* Install sbt
+* To build: sbt compile
+* To test: sbt test
+* To package all versions (instead of just one): sbt "+ package"
+* To generate IntelliJ project: sbt gen-idea
+
+For Scala 2.7.7:
+* ???
+
+Testing PostgreSQL:
+* Install Postgres
+* Create user 'admin' w/ password 'foobar' with permissions to create
+  databases, schemas, and roles.
+* Define the property 'scala-migrations.db.vendor' as value 'postgresql' before
+  running the tests, such as with the following command:
+  'sbt -Dscala-migrations.db.vendor=postgresql test'

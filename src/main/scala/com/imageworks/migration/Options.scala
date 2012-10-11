@@ -254,6 +254,12 @@ case object InsertPrivilege
 case object TriggerPrivilege
   extends GrantPrivilegeType
 
+/*
+ * Maps to GRANT USAGE
+ */
+case object UsagePrivilege
+  extends GrantPrivilegeType
+
 /**
  * Scala 2.8 deprecates case classes extending other case classes.
  * Instead of implementing PrivilegeWithColumns as a case class to get

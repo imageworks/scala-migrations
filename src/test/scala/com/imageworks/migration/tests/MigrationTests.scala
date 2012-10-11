@@ -36,11 +36,9 @@ import com.imageworks.migration.{AutoCommit,
                                  DuplicateMigrationDescriptionException,
                                  DuplicateMigrationVersionException,
                                  InstallAllMigrations,
-                                 MigrateToVersion,
                                  Migration,
                                  Migrator,
                                  RemoveAllMigrations,
-                                 RollbackMigration,
                                  With}
 
 import org.jmock.{Expectations,
@@ -48,10 +46,28 @@ import org.jmock.{Expectations,
 
 import org.junit.Assert._
 import org.junit.{Before,
-                  Test}
+                  Test,
+                  BeforeClass,
+                  AfterClass}
 
-import java.sql.{DriverManager,
-                 ResultSet}
+import java.sql.ResultSet
+import com.imageworks.migration.RollbackMigration
+import com.imageworks.migration.MigrateToVersion
+
+object MigrationTests
+{
+  @BeforeClass
+  def init(): Unit =
+  {
+    TestDatabase.setUp()
+  }
+
+  @AfterClass
+  def tear_down(): Unit =
+  {
+    TestDatabase.tearDown()
+  }
+}
 
 class MigrationTests
 {
@@ -368,7 +384,7 @@ class MigrationTests
     }
     catch {
       // With JDK 1.6 or later, a java.sql.SQLSyntaxErrorException
-      // could be caught here, but for 1.5 compaitibility, only a
+      // could be caught here, but for 1.5 compatibility, only a
       // java.sql.SQLException is caught.
       case e: java.sql.SQLException => // expected
     }
@@ -384,7 +400,7 @@ class MigrationTests
     }
     catch {
       // With JDK 1.6 or later, a java.sql.SQLSyntaxErrorException
-      // could be caught here, but for 1.5 compaitibility, only a
+      // could be caught here, but for 1.5 compatibility, only a
       // java.sql.SQLException is caught.
       case e: java.sql.SQLException =>
         // failure if got here
@@ -405,7 +421,7 @@ class MigrationTests
     }
     catch {
       // With JDK 1.6 or later, a java.sql.SQLSyntaxErrorException
-      // could be caught here, but for 1.5 compaitibility, only a
+      // could be caught here, but for 1.5 compatibility, only a
       // java.sql.SQLException is caught.
       case e: java.sql.SQLException => // expected
     }
