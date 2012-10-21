@@ -60,7 +60,7 @@ class MigrationArrowAssoc(s: String)
     new TableColumnDefinition(s, Array(other))
   }
 
-  def `->`(other: Tuple2[String,String]): TableColumnDefinition =
+  def `->`(other: (String, String)): TableColumnDefinition =
   {
     new TableColumnDefinition(s, Array(other._1, other._2))
   }
@@ -75,14 +75,14 @@ abstract class Migration
    * Concrete migration classes must define this method to migrate the
    * database up to a new migration.
    */
-  def up(): Unit
+  def up()
 
   /**
    * Concrete migration classes must define this method to back out of
    * this migration.  If the migration cannot be reversed, then a
    * IrreversibleMigrationException should be thrown.
    */
-  def down(): Unit
+  def down()
 
   /**
    * The raw connection to the database that underlies the logging
@@ -202,7 +202,7 @@ abstract class Migration
         statement.close()
       }
       catch {
-        case e => logger.warn("Error in closing statement:", e)
+        case e: Exception => logger.warn("Error in closing statement:", e)
       }
     }
   }
@@ -235,12 +235,12 @@ abstract class Migration
         c.commit()
       }
       catch {
-        case e1 => {
+        case e1: Exception => {
           try {
             c.rollback()
           }
           catch {
-            case e2 =>
+            case e2: Exception =>
               logger.warn("Trying to rollback a transaction due to " +
                           e1 +
                           " failed and threw:",
@@ -254,7 +254,7 @@ abstract class Migration
           statement.close()
         }
         catch {
-          case e3 => logger.warn("Error in closing prepared statement:", e3)
+          case e3: Exception => logger.warn("Error in closing prepared statement:", e3)
         }
       }
     }
@@ -330,7 +330,7 @@ abstract class Migration
    * @param table_name the name of the table with the column
    * @param column_name the name of the column
    * @param column_type the type the column is being altered to
-   * @param a possibly empty array of column options to customize the
+   * @param options a possibly empty array of column options to customize the
    *        column
    */
   final
@@ -362,7 +362,7 @@ abstract class Migration
   private
   def indexNameFor(table_name: String,
                    column_names: Array[String],
-                   options: IndexOption*): Tuple2[String,List[IndexOption]] =
+                   options: IndexOption*): (String, List[IndexOption]) =
   {
     var opts = options.toList
 
@@ -473,7 +473,7 @@ abstract class Migration
                                          "least one column name.")
     }
 
-    val (name, opts) = indexNameFor(table_name, column_names, options: _*)
+    val (name, _) = indexNameFor(table_name, column_names, options: _*)
 
     val sql = adapter.removeIndexSql(table_name, name)
 
@@ -504,7 +504,7 @@ abstract class Migration
    * @param on the table and columns the foreign key constraint is on
    * @param references the table and columns the foreign key
    *        constraint references
-   * @options a varargs list of ForeignKeyOption's
+   * @param options a varargs list of ForeignKeyOption's
    * @return a Tuple2 with the calculated name or the overridden name
    *         from a Name and the remaining options
    */
@@ -512,7 +512,7 @@ abstract class Migration
   def foreignKeyNameFor
     (on: On,
      references: References,
-     options: ForeignKeyOption*): Tuple2[String,List[ForeignKeyOption]] =
+     options: ForeignKeyOption*): (String, List[ForeignKeyOption]) =
   {
     var opts = options.toList
 
@@ -671,7 +671,7 @@ abstract class Migration
                                          "from the table being referenced.")
     }
 
-    var (name, opts) = foreignKeyNameFor(on, references, options: _*)
+    val (name, _) = foreignKeyNameFor(on, references, options: _*)
 
     execute("ALTER TABLE " +
             adapter.quoteTableName(on.tableName) +
@@ -766,12 +766,12 @@ abstract class Migration
   }
 
   /**
-   * Remove privileges on a table from one or more grantees.
+   * Remove privileges on a table from a grantee.
    *
    * @param table_name the table name to remove the grants from
-   * @param grantees a non-empty array of grantees
+   * @param grantee the grantee to revoke privileges from
    * @param privileges a non-empty array of privileges to remove from
-   *        the grantees
+   *        the grantee
    */
   final
   def revoke(table_name: String,
@@ -800,11 +800,7 @@ abstract class Migration
     }
 
     val a = adapter
-    var (name, opts) = a.generateCheckConstraintName(on, options: _*)
-
-    val quoted_on_column_names = on.columnNames.map {
-                                   a.quoteColumnName(_)
-                                 }.mkString(", ")
+    val (name, _) = a.generateCheckConstraintName(on, options: _*)
 
     val sql = new java.lang.StringBuilder(512)
                .append("ALTER TABLE ")
@@ -836,7 +832,7 @@ abstract class Migration
                                          "in the table adding the constraint.")
     }
 
-    var (name, opts) = adapter.generateCheckConstraintName(on, options: _*)
+    val (name, _) = adapter.generateCheckConstraintName(on, options: _*)
 
     execute("ALTER TABLE " +
             adapter.quoteTableName(on.tableName) +

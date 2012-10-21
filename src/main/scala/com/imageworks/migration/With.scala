@@ -73,7 +73,7 @@ object With
         c.close()
       }
       catch {
-        case e => logger.warn("Error in closing connection:", e)
+        case e: Exception => logger.warn("Error in closing connection:", e)
       }
     }
   }
@@ -99,7 +99,7 @@ object With
         s.close()
       }
       catch {
-        case e => logger.warn("Error in closing statement:", e)
+        case e: Exception => logger.warn("Error in closing statement:", e)
       }
     }
   }
@@ -125,7 +125,7 @@ object With
         rs.close()
       }
       catch {
-        case e => logger.warn("Error in closing result set:", e)
+        case e: Exception => logger.warn("Error in closing result set:", e)
       }
     }
   }

@@ -142,9 +142,9 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
       column_type match {
         case CharType =>
         case VarcharType =>
-        case column_type => {
+        case other_type => {
           logger.warn("The '{}' option cannot be used for a '{}' column type.",
-                      Array[AnyRef](character_set_opt.get, column_type): _*)
+                      Array[AnyRef](character_set_opt.get, other_type): _*)
       }
     }
 
@@ -245,7 +245,7 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
    * @param table_name the name of the table with the column
    * @param column_name the name of the column
    * @param column_type the type the column is being altered to
-   * @param a possibly empty array of column options to customize the
+   * @param options a possibly empty array of column options to customize the
    *        column
    * @return the SQL to alter the column
    */
@@ -269,7 +269,7 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
    * @param table_name the name of the table with the column
    * @param column_name the name of the column
    * @param column_type the type the column is being altered to
-   * @param a possibly empty array of column options to customize the
+   * @param options a possibly empty array of column options to customize the
    *        column
    * @return the SQL to alter the column
    */
@@ -418,9 +418,9 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
    * @param schema_name_opt the optional schema name to qualify the
    *        table name
    * @param table_name the name of the table with the index
-   * @param grantees one or more objects to grant the new permissions to.
+   * @param grantees one or more objects to grant the new permissions to
    * @param privileges one or more GrantPrivilegeType objects describing the
-   *        types of permissions to grant.
+   *        types of permissions to grant
    * @return the SQL to grant permissions
    */
   def grantSql(schema_name_opt: Option[String],
@@ -441,9 +441,9 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
    * Uses the schema_name_opt defined in the adapter.
    *
    * @param table_name the name of the table with the index
-   * @param grantees one or more objects to grant the new permissions to.
+   * @param grantees one or more objects to grant the new permissions to
    * @param privileges one or more GrantPrivilegeType objects describing the
-   *        types of permissions to grant.
+   *        types of permissions to grant
    * @return the SQL to grant permissions
    */
   def grantSql(table_name: String,
@@ -459,10 +459,10 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
    * @param schema_name_opt the optional schema name to qualify the
    *        table name
    * @param table_name the name of the table with the index
-   * @param grantees one or more objects to grant the new permissions to.
+   * @param grantees one or more objects to revoke the permissions from
    * @param privileges one or more GrantPrivilegeType objects describing the
-   *        types of permissions to grant.
-   * @return the SQL to grant permissions
+   *        types of permissions to revoke
+   * @return the SQL to revoke permissions
    */
   def revokeSql(schema_name_opt: Option[String],
                 table_name: String,
@@ -482,10 +482,10 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
    * Uses the schema_name_opt defined in the adapter.
    *
    * @param table_name the name of the table with the index
-   * @param grantees one or more objects to grant the new permissions to.
+   * @param grantees one or more objects to revoke the permissions from
    * @param privileges one or more GrantPrivilegeType objects describing the
-   *        types of permissions to grant.
-   * @return the SQL to grant permissions
+   *        types of permissions to revoke
+   * @return the SQL to revoke permissions
    */
   def revokeSql(table_name: String,
                 grantees: Array[String],
@@ -505,7 +505,7 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
    */
   def generateCheckConstraintName
     (on: On,
-     options: CheckOption*): Tuple2[String,List[CheckOption]] =
+     options: CheckOption*): (String, List[CheckOption]) =
   {
     var opts = options.toList
 
@@ -535,7 +535,7 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
    * ON DELETE clause.
    *
    * @param on_delete_opt an Option[OnDelete]
-   * @param the SQL text to append to the SQL to create a foreign key
+   * @return the SQL text to append to the SQL to create a foreign key
    *        relationship
    */
   def onDeleteSql(on_delete_opt: Option[OnDelete]): String =
@@ -551,7 +551,7 @@ class DatabaseAdapter(val schemaNameOpt: Option[String])
    * ON UPDATE clause.
    *
    * @param on_update_opt an Option[OnUpdate]
-   * @param the SQL text to append to the SQL to create a foreign key
+   * @return the SQL text to append to the SQL to create a foreign key
    *        relationship
    */
   def onUpdateSql(on_update_opt: Option[OnUpdate]): String =

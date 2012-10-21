@@ -67,7 +67,7 @@ class RichConnection(self: Connection)
         statement.close()
       }
       catch {
-        case e => logger.warn("Error in closing prepared statement:", e)
+        case e: Exception => logger.warn("Error in closing prepared statement:", e)
       }
     }
   }

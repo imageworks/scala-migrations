@@ -46,7 +46,7 @@ import org.junit.Test
 class DatabaseAdapterTests
 {
   @Test
-  def forVendor {
+  def forVendor() {
     assertEquals(classOf[DerbyDatabaseAdapter],
                  DatabaseAdapter.forVendor(Derby, None).getClass)
 
@@ -58,7 +58,7 @@ class DatabaseAdapterTests
   }
 
   @Test(expected=classOf[IllegalArgumentException])
-  def for_null_existent_driver_class {
+  def for_null_existent_driver_class() {
     DatabaseAdapter.forVendor(null, None)
   }
 }

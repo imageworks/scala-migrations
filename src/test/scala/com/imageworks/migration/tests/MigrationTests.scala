@@ -80,28 +80,28 @@ class MigrationTests
   }
 
   @Test(expected=classOf[DuplicateMigrationDescriptionException])
-  def duplicate_descriptions_throw_exception {
+  def duplicate_descriptions_throw_exception() {
     migrator.migrate(InstallAllMigrations,
                      "com.imageworks.migration.tests.duplicate_descriptions",
                      false)
   }
 
   @Test(expected=classOf[DuplicateMigrationVersionException])
-  def duplicate_versions_throw_exception {
+  def duplicate_versions_throw_exception() {
     migrator.migrate(InstallAllMigrations,
                      "com.imageworks.migration.tests.duplicate_versions",
                      false)
   }
 
   @Test(expected=classOf[IllegalArgumentException])
-  def scale_without_precision {
+  def scale_without_precision() {
     migrator.migrate(InstallAllMigrations,
                      "com.imageworks.migration.tests.scale_without_precision",
                      false)
   }
 
   @Test
-  def migrate_up_and_down {
+  def migrate_up_and_down() {
     // There should be no tables in the schema initially.
     assertEquals(0, migrator.getTableNames.size)
 
@@ -212,7 +212,7 @@ class MigrationTests
   }
 
   @Test
-  def get_migration_statuses_does_not_create_schema_migrations {
+  def get_migration_statuses_does_not_create_schema_migrations() {
     // In a brand new database there should be no tables.
     assertEquals(0, migrator.getTableNames.size)
 
@@ -246,7 +246,7 @@ class MigrationTests
   }
 
   @Test
-  def why_not_migrated_does_not_create_schema_migrations {
+  def why_not_migrated_does_not_create_schema_migrations() {
     // In a brand new database there should be no tables.
     assertEquals(0, migrator.getTableNames.size)
 
@@ -270,7 +270,7 @@ class MigrationTests
   }
 
   @Test
-  def alter_column {
+  def alter_column() {
     // In a brand new database there should be no tables.
     assertEquals(0, migrator.getTableNames.size)
 
@@ -325,7 +325,7 @@ class MigrationTests
   }
 
   @Test
-  def grant_and_revoke {
+  def grant_and_revoke() {
     val connection_builder = TestDatabase.getUserConnectionBuilder
     val database_adapter = TestDatabase.getDatabaseAdapter
 
@@ -341,7 +341,7 @@ class MigrationTests
       "SELECT name FROM " +
       database_adapter.quoteTableName("scala_migrations_location")
 
-    def run_select {
+    def run_select() {
       test_migrator.withLoggingConnection(AutoCommit) { connection =>
         With.statement(connection.prepareStatement(select_sql)) { statement =>
           With.resultSet(statement.executeQuery()) { rs => }
@@ -351,7 +351,7 @@ class MigrationTests
 
     // try to select table, should give a permissions error
     try {
-      run_select
+      run_select()
 
       // failure if got here
       fail("SELECT permission failure expected")
@@ -370,7 +370,7 @@ class MigrationTests
 
     // try to select table, should succeed now that grant has been given
     try {
-      run_select
+      run_select()
     }
     catch {
       // With JDK 1.6 or later, a java.sql.SQLSyntaxErrorException
@@ -401,7 +401,7 @@ class MigrationTests
 
     // try to select table, should give a permissions error again
     try {
-      run_select
+      run_select()
 
       // failure if got here
       fail("SELECT permission failure expected")
@@ -415,7 +415,7 @@ class MigrationTests
   }
 
   @Test
-  def columns_can_hold_types {
+  def columns_can_hold_types() {
     migrator.migrate(InstallAllMigrations,
                      "com.imageworks.migration.tests.types",
                      false)
@@ -465,7 +465,7 @@ class MigrationTests
   }
 
   @Test
-  def with_result_set_closes_on_normal_return {
+  def with_result_set_closes_on_normal_return() {
     val mock_rs = context.mock(classOf[ResultSet])
 
     context.checking(new Expectations {
@@ -494,7 +494,7 @@ class MigrationTests
   }
 
   @Test
-  def with_result_set_closes_on_throw {
+  def with_result_set_closes_on_throw() {
     val mock_rs = context.mock(classOf[ResultSet])
 
     context.checking(new Expectations {
