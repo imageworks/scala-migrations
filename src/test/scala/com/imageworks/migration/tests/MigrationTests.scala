@@ -48,10 +48,26 @@ import org.jmock.{Expectations,
 
 import org.junit.Assert._
 import org.junit.{Before,
-                  Test}
+                  Test,
+                  BeforeClass,
+                  AfterClass}
 
-import java.sql.{DriverManager,
-                 ResultSet}
+import java.sql.ResultSet
+
+object MigrationTests
+{
+  @BeforeClass
+  def init()
+  {
+    TestDatabase.setUp()
+  }
+
+  @AfterClass
+  def tear_down()
+  {
+    TestDatabase.tearDown()
+  }
+}
 
 class MigrationTests
 {

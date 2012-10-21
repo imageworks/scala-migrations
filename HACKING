@@ -51,6 +51,19 @@ http://www.scala-sbt.org/ .
 * To package all versions (instead of just one): sbt "+ package"
 * To generate IntelliJ project: sbt gen-idea
 
+##### Running tests for PostgreSQL
+
+By default the tests are run using Derby, an in-memory database.  It
+is also possible to run the tests against PostgreSQL.
+
+* Install PostgreSQL
+  * http://www.postgresql.org/
+* Create user `admin` w/ password `foobar` with permissions to create
+  databases, schemas, and roles.
+* Define the property `scala-migrations.db.vendor` as value
+  `postgresql` before running the tests:
+  sbt "-Dscala-migrations.db.vendor=postgresql + test"
+
 ##### Scala 2.7
 
 The `scala-2.7` branch uses ant to build, run unit tests and package

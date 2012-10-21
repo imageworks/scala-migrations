@@ -40,10 +40,23 @@ import com.imageworks.migration.{AutoCommit,
 
 import org.junit.Assert._
 import org.junit.{Before,
-                  Test}
+                  Test,
+                  BeforeClass,
+                  AfterClass}
 
-import java.sql.DriverManager
+object JavaMigratorTests {
+  @BeforeClass
+  def init()
+  {
+    TestDatabase.setUp()
+  }
 
+  @AfterClass
+  def tear_down()
+  {
+    TestDatabase.tearDown()
+  }
+}
 class JavaMigratorTests
 {
   private
