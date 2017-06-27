@@ -80,10 +80,10 @@ class WithTests {
     val e1 = new RuntimeException
     val e2 = new SQLException
 
-    context.checking(new Expectations {
-      oneOf(mockResultSet).close()
-      will(Expectations.throwException(e2))
-    })
+//    context.checking(new Expectations {
+//      oneOf(mockResultSet).close()
+//      will(Expectations.throwException(e2))
+//    })
 
     var caughtExceptionOpt: Option[Exception] = None
     var rs1: ResultSet = null
@@ -111,10 +111,10 @@ class WithTests {
 
     val e1 = new SQLException
 
-    context.checking(new Expectations {
-      oneOf(mockResultSet).close()
-      will(Expectations.throwException(e1))
-    })
+//    context.checking(new Expectations {
+//      oneOf(mockResultSet).close()
+//      will(Expectations.throwException(e1))
+//    })
 
     var caughtExceptionOpt: Option[Exception] = None
     var rs1: ResultSet = null

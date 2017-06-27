@@ -166,7 +166,7 @@ object DerbyTestDatabase
   }
   catch {
     // For JDBC3 (JDK 1.5)
-    case _: org.apache.derby.impl.jdbc.EmbedSQLException =>
+//    case _: org.apache.derby.impl.jdbc.EmbedSQLException =>
 
     // For JDBC4 (JDK 1.6), a
     // java.sql.SQLNonTransientConnectionException is thrown, but this
