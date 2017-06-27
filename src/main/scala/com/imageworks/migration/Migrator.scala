@@ -79,7 +79,7 @@ object Migrator {
    * The name of the table that stores all the installed migration
    * version numbers.
    */
-  val schemaMigrationsTableName = "schema_migrations"
+  val schemaMigrationsTableName = System.getProperty("migration.tablename", "schema_migrations")
 
   /**
    * Given a path to a JAR file, return a set of all the names of all
